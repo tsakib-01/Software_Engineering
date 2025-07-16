@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagination without JS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <!-- Pagination controls -->
+    <div class="pagination-controls">
+      <label for="page1" class="page-btn left">&#8249;</label>
+      <label for="page2" class="page-btn right">&#8250;</label>
+    </div>
+
+    <!-- Content for Page 1 -->
+    <div class="brands">
+      <div class="brand" id="page1-content">
+        <h2>Brand 1</h2>
+        <p>Details about Brand 1</p>
+      </div>
+      <div class="brand" id="page2-content">
+        <h2>Brand 2</h2>
+        <p>Details about Brand 2</p>
+      </div>
+      <div class="brand" id="page3-content">
+        <h2>Brand 3</h2>
+        <p>Details about Brand 3</p>
+      </div>
+      <div class="brand" id="page4-content">
+        <h2>Brand 4</h2>
+        <p>Details about Brand 4</p>
+      </div>
+    </div>
+
+    <!-- Radio buttons for page toggling -->
+    <input type="radio" name="page" id="page1" checked>
+    <input type="radio" name="page" id="page2">
+    <input type="radio" name="page" id="page3">
+    <input type="radio" name="page" id="page4">
+  </div>
+
+
+<style>
+
+/* General page styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 80%;
+  margin: 50px auto;
+  text-align: center;
+}
+
+.pagination-controls {
+  margin-bottom: 20px;
+}
+
+.page-btn {
+  font-size: 24px;
+  padding: 10px;
+  cursor: pointer;
+  user-select: none;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.page-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Hide all brands by default */
+.brands .brand {
+  display: none;
+}
+
+/* Show the active page */
+input[type="radio"]:checked + .brands #page1-content {
+  display: block;
+}
+
+input[type="radio"]:checked + .brands #page2-content {
+  display: block;
+}
+
+input[type="radio"]:checked + .brands #page3-content {
+  display: block;
+}
+
+input[type="radio"]:checked + .brands #page4-content {
+  display: block;
+}
+
+/* Radio buttons positioning */
+input[type="radio"] {
+  display: none;
+}
+
+/* Styling the content for each brand */
+.brand {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  color: #333;
+}
+
+
+
+
+</style>
+
+
+  
+</body>
+</html>
+
+
+

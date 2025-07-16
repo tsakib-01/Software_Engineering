@@ -1,0 +1,894 @@
+<?php
+include('db_connection.php');
+// Check connection
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+
+// Query to fetch settings from the table
+$sql = "SELECT address, logo, thank_you_img FROM settings_table LIMIT 1";
+$result = $conn->query($sql);
+
+// Check if there's a row fetched
+if ($result->num_rows > 0) {
+    // Fetch the row
+    $row = $result->fetch_assoc();
+    $address = $row['address'];
+    $logo = $row['logo'];
+    $thank_you_img = $row['thank_you_img'];
+} else {
+    echo "No settings found.";
+}
+$conn->close();
+?>
+
+<?php
+include 'db_connection.php';
+
+// Initialize filter values
+$category = isset($_GET['category']) ? $_GET['category'] : 'fish'; // Default to 'cat'
+$min_price = isset($_GET['min_price']) ? $_GET['min_price'] : '';
+$max_price = isset($_GET['max_price']) ? $_GET['max_price'] : '';
+$firstName = isset($_GET['first_name']) ? $_GET['first_name'] : '';
+$email = isset($_GET['email']) ? urldecode($_GET['email']) : '';
+
+
+
+// Create SQL query based on filters
+$sql = "SELECT * FROM `product_table` WHERE 1";
+
+// Apply category filter if selected
+if ($category != '') {
+    $sql .= " AND `category` = '$category'";
+}
+
+// Apply price range filter if provided
+if ($min_price != '' && $max_price != '') {
+    $sql .= " AND `price` BETWEEN $min_price AND $max_price";
+} elseif ($min_price != '') {
+    $sql .= " AND `price` >= $min_price";
+} elseif ($max_price != '') {
+    $sql .= " AND `price` <= $max_price";
+}
+
+// Execute query
+$result = $conn->query($sql);
+
+// Store results in an array
+$products = ($result->num_rows > 0) ? $result->fetch_all(MYSQLI_ASSOC) : [];
+$conn->close();
+
+// Set default title as 'All Products'
+$title = 'All Products';
+
+// Check if a category is selected and update the title accordingly
+if ($category) {
+    $title = ucfirst($category) . ' Products'; // Capitalize the first letter of the category
+}
+?>
+
+<?php
+// Assuming step 2 is accessed via URL query (?step=2)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Capture customer information
+    $customer_name = $_POST['name'];
+    $customer_address = $_POST['address'];
+    
+    // Save data to session or directly process order
+    $_SESSION['customer_name'] = $customer_name;
+    $_SESSION['customer_address'] = $customer_address;
+
+    // Redirect to order confirmation page
+    header("Location: checkout.php?step=3");
+    exit();
+}
+?>
+
+
+
+
+
+
+
+<!-- cart_table -->
+
+<?php
+// Assuming the user is logged in and we have access to $email from the URL
+$email = $_GET['email'] ?? ''; // If 'email' is not set, default to empty string
+
+// Database connection
+$servername = "localhost"; // Database server
+$username = "root"; // Database username
+$password = ""; // Database password
+$dbname = "petstore"; // Database name
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check if the connection is successful
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get total price from the cart_discount column multiplied by cart_quantity for the logged-in user
+$sql_total_price = "SELECT SUM(cart_discount * cart_quantity) AS total_price FROM cart_table WHERE cart_email = '$email'";
+$result_total_price = $conn->query($sql_total_price);
+$total_price = 0.00; // Default value
+
+if ($result_total_price->num_rows > 0) {
+    $row = $result_total_price->fetch_assoc();
+    $total_price = $row['total_price']; // Get the sum of cart_discount * cart_quantity
+}
+// Get the total count of products from the cart for the logged-in user
+$sql_product_count = "SELECT COUNT(*) AS total_count FROM cart_table WHERE cart_email = '$email'";
+$result_product_count = $conn->query($sql_product_count);
+$total_count = 0; // Default value
+
+if ($result_product_count->num_rows > 0) {
+    $row = $result_product_count->fetch_assoc();
+    $total_count = $row['total_count']; // Get the count of products
+}
+
+// Close the database connection
+$conn->close();
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="data:image/png;base64,<?php echo $logo; ?>">
+  <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+
+  <!-- navbar -->
+  <div class="flex p-2 bg-black h-60px place-items-center sticky top-0 left-0 right-0 z-50">
+    <div class="flex-none w-1/12 pl-7">
+    <a href="#"><img src="data:image/png;base64,<?php echo $logo; ?>" alt="Logo" height="50px" width="50px">
+    </a>
+    </div>
+    <div class="flex-none w-12/12">
+      <ul class="list-none flex flex-row space-x-6 font-medium font-sans text-white text-base">
+      <li class="mt-2"><a href="welcome.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">Home</a></li>
+       <li class="mt-2"><a href="cat_products.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">Cats</a></li>
+        <li class="mt-2"><a href="dog_products.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">Dogs</a></li>
+        <li class="mt-2"><a href="bird_products.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">Birds</a></li>
+        <li class="mt-2"><a href="fish_products.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">Fish</a></li>
+        <li class="mt-2"><a href="rabbit_products.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">Rabbits</a></li>
+        <li class="mt-2"><a href="all_products.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">All Products</a></li>
+        <li class="mt-2"><a href="about.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">About</a></li>
+       
+        <li><input type="text" id="search-input" placeholder="Search Products..." class="px-3 py-2 rounded-md bg-gray-800 text-white w-full" oninput="searchProducts()">
+        
+        <!-- Dropdown for suggestions -->
+        <div id="search-results" class="absolute bg-white text-black  w-96 mt-2 p-2 rounded-md shadow-md hidden">
+            <!-- Results will be dynamically inserted here -->
+        </div>
+
+        <script>
+    function searchProducts() {
+        const searchInput = document.getElementById('search-input').value;
+
+        if (searchInput.length > 0) {
+            // Create a new XMLHttpRequest object
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `search_products.php?search=${encodeURIComponent(searchInput)}`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const results = JSON.parse(xhr.responseText);
+                    const resultsContainer = document.getElementById('search-results');
+                    resultsContainer.innerHTML = ''; // Clear previous results
+
+                    // If no results, show a message
+                    if (results.length === 0) {
+                        resultsContainer.innerHTML = '<p class="text-gray-500">No products found</p>';
+                    } else {
+                        // Loop through and display each result
+                        results.forEach(result => {
+                            const resultItem = document.createElement('div');
+                            resultItem.classList.add('search-result-item', 'p-2', 'cursor-pointer', 'hover:bg-gray-100');
+
+                            // Check if the base64 image exists and use it
+                            const imgSrc = result.img ? `data:image/jpeg;base64,${result.img}` : 'images/default.jpg'; // Fallback image
+
+                            resultItem.innerHTML = `
+                                <div class="flex items-center space-x-2">
+                                    <img src="${imgSrc}" alt="${result.title}" class="w-12 h-12 object-cover rounded">
+                                    <div>
+                                        <h4 class="text-sm font-semibold">${result.title}</h4>
+                                        <p class="text-xs text-gray-600">Tk.${result.discount}</p>
+                                    </div>
+                                </div>
+                            `;
+
+                            resultItem.addEventListener('click', () => {
+    // Get the product ID and other necessary values
+    const productID = result.id; // The product ID from the search result
+    const firstName = '<?php echo $firstName; ?>'; // Inject first name (from PHP)
+    const email = '<?php echo urlencode($email); ?>'; // Inject and URL-encode email (from PHP)
+
+    // Construct the URL with the required query parameters
+    const url = `product.php?productID=${productID}&first_name=${firstName}&email=${email}`;
+
+    // Redirect to the product page
+    window.location.href = url;
+});
+
+
+                            resultsContainer.appendChild(resultItem);
+                        });
+                    }
+                    resultsContainer.classList.remove('hidden'); // Show results container
+                }
+            };
+            xhr.send();
+        } else {
+            document.getElementById('search-results').classList.add('hidden'); // Hide results when input is empty
+        }
+    }
+</script>
+</li>
+   </ul>
+    </div>
+    <div class="flex-none w-3/12 font-medium font-sans text-white text-base rounded-md  justify-end pr-7">
+    
+        
+
+      
+    <?php
+// Assuming the user is logged in and we have access to $email from the URL
+$email = $_GET['email'] ?? ''; // If 'email' is not set, default to empty string
+
+// Database connection
+$servername = "localhost"; // Database server
+$username = "root"; // Database username
+$password = ""; // Database password
+$dbname = "petstore"; // Database name
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check if the connection is successful
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get total price from the cart_discount column multiplied by cart_quantity for the logged-in user
+$sql_total_price = "SELECT SUM(cart_discount * cart_quantity) AS total_price FROM cart_table WHERE cart_email = '$email'";
+$result_total_price = $conn->query($sql_total_price);
+$total_price = 0.00; // Default value
+
+if ($result_total_price->num_rows > 0) {
+    $row = $result_total_price->fetch_assoc();
+    $total_price = $row['total_price']; // Get the sum of cart_discount * cart_quantity
+}
+// Get the total count of products from the cart for the logged-in user
+$sql_product_count = "SELECT COUNT(*) AS total_count FROM cart_table WHERE cart_email = '$email'";
+$result_product_count = $conn->query($sql_product_count);
+$total_count = 0; // Default value
+
+if ($result_product_count->num_rows > 0) {
+    $row = $result_product_count->fetch_assoc();
+    $total_count = $row['total_count']; // Get the count of products
+}
+
+// Close the database connection
+$conn->close();
+?>
+
+<a class="absolute top-4 right-4 flex items-center" href="user_mycart.php?first_name=<?php echo $firstName; ?>&email=<?php echo $email; ?>">
+  <!-- dashboard -->
+  <div class="flex items-center">
+    <img src="ress/money.png" height="28px" width="28px" alt="">
+    <div class="text-lg font-medium">
+      <!-- Display the total price dynamically -->
+      <span class="align-self-end"><?php echo number_format($total_price, 2); ?></span> <!-- Format to 2 decimal places -->
+    </div>
+    <img src="ress/cart.png" height="28px" width="28px" alt="">
+  </div>
+  <!-- Display the total number of products dynamically -->
+  <div class="pl-1.5 pr-1.5  pt-0.5 pb-0.5 bg-slate-600 text-white text-xs mt-2 rounded-full"><?php echo $total_count; ?></div>
+</a>
+
+      
+      </div>
+    </div>
+<!-- navbar_end -->
+
+
+<div class="p-8">
+<div class="container mx-auto p-6 bg-white rounded-lg flex items-center justify-center">
+<div class="w-full max-w-6xl">
+  <div class="flex items-center justify-between">
+    <!-- Step 1 -->
+    <div class="flex flex-col items-center">
+      <div class="w-12 h-12 flex items-center justify-center rounded-full bg-green-500 text-white font-bold transition duration-300 ease-in-out transform hover:scale-110">
+        1
+      </div>
+      <span class="mt-2 text-green-500 text-sm">Shopping Cart</span>
+    </div>
+
+    <!-- Line between Step 1 and Step 2 -->
+    <div class="flex-1 h-1 bg-green-500 mx-4 rounded-lg"></div>
+
+    <!-- Step 2 -->
+    <div class="flex flex-col items-center">
+      <div class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-600 text-white font-bold transition duration-300 ease-in-out transform hover:scale-110">
+        2
+      </div>
+      <span class="mt-2 text-gray-600 text-sm">Shipping and Checkout</span>
+    </div>
+
+    <!-- Line between Step 2 and Step 3 -->
+    <div class="flex-1 h-1 bg-gray-600 mx-4 rounded-lg"></div>
+
+    <!-- Step 3 -->
+    <div class="flex flex-col items-center">
+      <div class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-300 text-gray-600 font-bold transition duration-300 ease-in-out transform hover:scale-110">
+        3
+      </div>
+      <span class="mt-2 text-gray-600 text-sm">Confirmation</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- part-A and B  -->
+<div class="flex gap-14">
+
+<?php
+// Include your database connection
+include('db_connection.php');
+
+
+
+// Query to fetch the user data based on the email
+$query = "SELECT fname, lname, address FROM personalinfo WHERE email = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('s', $email); // 's' is for string type
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Check if we got any result
+if ($result->num_rows > 0) {
+    // Fetch the row
+    $row = $result->fetch_assoc();
+    $firstName = $row['fname'];
+    $lastName = $row['lname'];
+    $p_address = $row['address'];
+} else {
+    // Debugging: Check if no result
+    echo "No data found for email: $email";
+    // Set default empty values if no result found
+    $firstName = '';
+    $lastName = '';
+    $p_address = '';
+}
+
+?>
+
+<?php
+// Include database connection
+include('db_connection.php');
+
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    // Get the form data
+    $firstName = mysqli_real_escape_string($conn, $_POST['first-name']);
+    $lastName = mysqli_real_escape_string($conn, $_POST['last-name']);
+    $p_address = mysqli_real_escape_string($conn, $_POST['p_address']);
+    $district = mysqli_real_escape_string($conn, $_POST['district']);
+    $zip = isset($_POST['zip']) ? mysqli_real_escape_string($conn, $_POST['zip']) : null;
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $email = isset($_POST['email']) ? mysqli_real_escape_string($conn, $_POST['email']) : null;
+    $notes = isset($_POST['notes']) ? mysqli_real_escape_string($conn, $_POST['notes']) : null;
+
+    // Example for subtotal, shipping cost, and total (you would calculate these based on the cart)
+    $subtotal = 1000; // Example, fetch it from cart or calculate dynamically
+    $shippingCost = 40; // Example, could be free or dynamic based on shipping method
+    $total = $subtotal + $shippingCost; // Example calculation
+
+    // Get the payment method (from form)
+    $paymentMethod = isset($_POST['payment']) ? mysqli_real_escape_string($conn, $_POST['payment']) : 'cod'; // default to COD
+
+    // Assuming you have cart data available, loop through and insert each product into the order_table
+    // Example for looping through cart items
+    $cart_email = $_GET['email']; // Assuming you get the email from the URL as per your earlier code
+
+    $query = "SELECT * FROM cart_table WHERE cart_email = '$cart_email'";
+    $result = mysqli_query($conn, $query);
+
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $order_productID = mysqli_real_escape_string($conn, $row['cart_productID']);
+            $order_productIMG = mysqli_real_escape_string($conn, $row['cart_productIMG']);
+            $order_category = mysqli_real_escape_string($conn, $row['cart_category']);
+            $order_subtitles = mysqli_real_escape_string($conn, $row['cart_subtitles']);
+            $order_titles = mysqli_real_escape_string($conn, $row['cart_titles']);
+            $order_discount_price = mysqli_real_escape_string($conn, $row['cart_discount']);
+            $order_quantity = mysqli_real_escape_string($conn, $row['cart_quantity']);
+
+            // Insert data into the order_table
+            $order_query = "INSERT INTO order_table (order_useremail, order_userfname, order_userlname, shipping_address, district, postcode, phone_number, additional_email, order_notes, order_productID, order_productIMG, order_category, order_subtitles, order_titles, order_discount_price, order_quantity, order_total_cost) 
+                            VALUES ('$email', '$firstName', '$lastName', '$p_address', '$district', '$zip', '$phone', '$email', '$notes', '$order_productID', '$order_productIMG', '$order_category', '$order_subtitles', '$order_titles', '$order_discount_price', '$order_quantity', '$total')";
+
+            if (!mysqli_query($conn, $order_query)) {
+                echo "Error: " . mysqli_error($conn);
+            }
+        }
+        echo "Order placed successfully!";
+    } else {
+        echo "No items found in the cart!";
+    }
+}
+?>
+
+
+
+<!-- part-A -->
+<div class="w-7/12">
+<h2 class="text-2xl font-semibold mb-6">Enter Your Details</h2>
+<form method="POST" class="space-y-6">
+    <!-- First Name and Last Name -->
+    <div class="flex space-x-4">
+        <div class="w-full">
+            <label for="first-name" class="block text-sm font-semibold text-gray-700">First Name</label>
+            <input type="text" name="first-name" id="first-name" required class="input w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your first name" value="<?php echo htmlspecialchars($firstName); ?>" />
+        </div>
+        <div class="w-full">
+            <label for="last-name" class="block text-sm font-semibold text-gray-700">Last Name</label>
+            <input type="text" name="last-name" id="last-name" required class="input w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your last name" value="<?php echo htmlspecialchars($lastName); ?>" />
+        </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div>
+        <label for="p_address" class="block text-sm font-semibold text-gray-700">Shipping Address</label>
+        <textarea name="p_address" id="address" required class="input w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your shipping address"><?php echo htmlspecialchars($p_address); ?></textarea>
+    </div>
+
+    <!-- District Dropdown -->
+    <div>
+        <label for="district" class="block text-sm font-semibold text-gray-700">District</label>
+        <select name="district" id="district" required class="w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="Bagerhat">Bagerhat</option>
+            <option value="Bandarban">Bandarban</option>
+            <option value="Barisal">Barisal</option>
+            <option value="Bhola">Bhola</option>
+            <option value="Bogura">Bogura</option>
+            <option value="Brahmanbaria">Brahmanbaria</option>
+            <option value="Chandpur">Chandpur</option>
+            <option value="Chapainawabganj">Chapainawabganj</option>
+            <option value="Chattogram">Chattogram</option>
+            <option value="Chuadanga">Chuadanga</option>
+            <option value="Comilla">Comilla</option>
+            <option value="Cox's Bazar">Cox's Bazar</option>
+            <option value="Dhaka">Dhaka</option>
+            <option value="Dinajpur">Dinajpur</option>
+            <option value="Faridpur">Faridpur</option>
+            <option value="Feni">Feni</option>
+            <option value="Gaibandha">Gaibandha</option>
+            <option value="Gazipur">Gazipur</option>
+            <option value="Gopalganj">Gopalganj</option>
+            <option value="Habiganj">Habiganj</option>
+            <option value="Jamalpur">Jamalpur</option>
+            <option value="Jashore">Jashore</option>
+            <option value="Jhenaidah">Jhenaidah</option>
+            <option value="Joypurhat">Joypurhat</option>
+            <option value="Khagrachari">Khagrachari</option>
+            <option value="Khulna">Khulna</option>
+            <option value="Kishoreganj">Kishoreganj</option>
+            <option value="Kurigram">Kurigram</option>
+            <option value="Kushtia">Kushtia</option>
+            <option value="Lakshmipur">Lakshmipur</option>
+            <option value="Lalmonirhat">Lalmonirhat</option>
+            <option value="Madaripur">Madaripur</option>
+            <option value="Magura">Magura</option>
+            <option value="Manikganj">Manikganj</option>
+            <option value="Meherpur">Meherpur</option>
+            <option value="Moulvibazar">Moulvibazar</option>
+            <option value="Munshiganj">Munshiganj</option>
+            <option value="Mymensingh">Mymensingh</option>
+            <option value="Naogaon">Naogaon</option>
+            <option value="Narail">Narail</option>
+            <option value="Narayanganj">Narayanganj</option>
+            <option value="Narsingdi">Narsingdi</option>
+            <option value="Netrokona">Netrokona</option>
+            <option value="Nilphamari">Nilphamari</option>
+            <option value="Noakhali">Noakhali</option>
+            <option value="Pabna">Pabna</option>
+            <option value="Panchagarh">Panchagarh</option>
+            <option value="Patuakhali">Patuakhali</option>
+            <option value="Pirojpur">Pirojpur</option>
+            <option value="Rajbari">Rajbari</option>
+            <option value="Rajshahi">Rajshahi</option>
+            <option value="Rangamati">Rangamati</option>
+            <option value="Rangpur">Rangpur</option>
+            <option value="Satkhira">Satkhira</option>
+            <option value="Shariatpur">Shariatpur</option>
+            <option value="Sherpur">Sherpur</option>
+            <option value="Sirajganj">Sirajganj</option>
+            <option value="Sunamganj">Sunamganj</option>
+            <option value="Sylhet">Sylhet</option>
+            <option value="Tangail">Tangail</option>
+            <option value="Thakurgaon">Thakurgaon</option>
+        
+        </select>
+    </div>
+
+    <!-- Postcode/ZIP (optional) -->
+    <div>
+        <label for="zip" class="block text-sm font-semibold text-gray-700">Postcode/ZIP (optional)</label>
+        <input type="text" name="zip" id="zip" class="input w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your ZIP Code" />
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-4">
+        <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+        <div class="flex items-center border border-gray-300 rounded-lg">
+            <span class="p-3 text-gray-700 bg-gray-100 border-r border-gray-300 rounded-l-lg">+880</span>
+            <input type="tel" name="phone" id="phone" required class="input w-full p-3 border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your phone number" />
+        </div>
+    </div>
+
+    <!-- Email (optional) -->
+    <div class="mb-4">
+        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address (Optional)</label>
+        <input type="email" name="email" id="email" class="input w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email address" />
+    </div>
+
+    <!-- Order notes (optional) -->
+    <div>
+        <label for="notes" class="block text-sm font-semibold text-gray-700">Order notes (optional)</label>
+        <textarea name="notes" id="notes" class="input w-full p-3 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-40 resize-none" placeholder="Notes about your order, e.g. special notes for delivery."></textarea>
+    </div>
+</form>
+
+</div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<?php
+// Database connection
+include('db_connection.php');
+
+// Retrieve the email from the URL query parameter
+if (isset($_GET['email']) && !empty($_GET['email'])) {
+    $cart_email = $_GET['email'];
+} else {
+    echo '<p class="text-center text-red-500">Email is missing from the URL.</p>';
+    exit;
+}
+
+// Fetch cart items and calculate subtotal
+$query = "SELECT * FROM cart_table WHERE cart_email = '$cart_email'";
+$result = mysqli_query($conn, $query);
+
+$subtotal = 0;
+$cart_items = [];
+
+if (mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $cart_items[] = $row;
+        $subtotal += $row['cart_discount'] * $row['cart_quantity'];
+    }
+}
+?>
+
+<!-- <style>
+    *{
+        outline: 1px solid red;
+    }
+</style> -->
+
+<div class="w-1/3 mx-auto mt-10 bg-white p-6 rounded-lg shadow-lg">
+
+
+    <!-- Subtotal Section -->
+    <div>
+        <h2 class="text-lg font-semibold mb-4">Your Order</h2>
+        <div id="cart-items" class="space-y-2 mb-4">
+            <?php if (!empty($cart_items)): ?>
+                <?php foreach ($cart_items as $item): ?>
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <div class="flex items-center">
+                            <img src="data:image/jpeg;base64,<?= $item['cart_productIMG'] ?>" alt="Product Image" class="w-12 h-12 object-cover rounded mr-4">
+                            <span class="text-sm"><?= str_replace('+', ' ', $item['cart_titles']) ?> <span class="text-gray-500">x <?= $item['cart_quantity'] ?></span></span>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">৳<?= number_format($item['cart_discount'], 2) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="text-sm text-gray-500">Your cart is empty.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="flex justify-between items-center border-t pt-2">
+            <span class="text-sm text-gray-600">Subtotal</span>
+            <span id="subtotal" class="text-sm font-medium text-gray-900">৳<?= number_format($subtotal, 2) ?></span>
+        </div>
+    </div>
+
+    <!-- Coupon Section -->
+    <div class="mt-4">
+        <label for="coupon" class="block text-sm font-medium text-gray-700">Coupon Code</label>
+        <div class="mt-1 flex">
+            <input id="coupon" type="text" placeholder="Enter coupon code"
+                class="block w-full px-3 py-2 border rounded-md text-sm focus:ring-orange-500 focus:border-orange-500">
+            <button id="apply-coupon" class="ml-2 px-4 py-2 bg-orange-500 text-white rounded-md text-sm hover:bg-orange-600">Apply</button>
+        </div>
+        <p id="coupon-message" class="mt-2 text-sm text-gray-500 hidden">Coupon applied!</p>
+    </div>
+
+    <!-- Shipping Section -->
+    <div class="mt-4">
+        <h3 class="text-sm font-medium text-gray-700">Shipping</h3>
+        <div class="mt-2 space-y-2">
+            <label class="flex items-center">
+                <input type="radio" name="shipping" value="free" checked
+                    class="text-orange-500 focus:ring-orange-500">
+                <span class="ml-2 text-sm">Free Shipping</span>
+            </label>
+            <label class="flex items-center">
+                <input type="radio" name="shipping" value="flat" class="text-orange-500 focus:ring-orange-500">
+                <span class="ml-2 text-sm">Flat Rate: ৳40.00</span>
+            </label>
+            <label class="flex items-center">
+                <input type="radio" name="shipping" value="pickup" class="text-orange-500 focus:ring-orange-500">
+                <span class="ml-2 text-sm">Pickup from Office - Behind Police Plaza, Gulshan#1, Dhaka. (Free)</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Total Section -->
+    <div class="mt-6 border-t pt-4">
+   
+        <div class="flex justify-between items-center text-lg font-bold mt-4">
+            <span>Total</span>
+            <span id="total">৳<?= number_format($subtotal, 2) ?></span>
+        </div>
+    </div>
+
+    <!-- Payment Options -->
+    <div class="mt-6">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Payment Method</h3>
+        <div class="space-y-2">
+            <label class="flex items-center">
+                <input type="radio" name="payment" value="cod" checked
+                    class="text-orange-500 focus:ring-orange-500">
+                <span class="ml-2 text-sm">Cash on Delivery</span>
+            </label>
+            <label class="flex items-center">
+                <input type="radio" name="payment" value="card" class="text-orange-500 focus:ring-orange-500">
+                <span class="ml-2 text-sm">Credit / Debit Card <span class="ml-1 px-2 py-0.5 bg-gray-200 text-gray-600 rounded">SSLCommerz</span></span>
+            </label>
+            <label class="flex items-center">
+                <input type="radio" name="payment" value="bkash" class="text-orange-500 focus:ring-orange-500">
+                <span class="ml-2 text-sm">bKash Payment Gateway <span class="ml-1 px-2 py-0.5 bg-gray-200 text-gray-600 rounded">bKash</span></span>
+            </label>
+        </div>
+    </div>
+
+    <script>
+    // Function to check if all required fields are filled
+    function checkFormCompletion() {
+        // Get all required inputs in the form
+        var requiredInputs = document.querySelectorAll('form input[required], form select[required], form textarea[required]');
+        var isFormValid = true;
+
+        // Check if all required inputs have values
+        requiredInputs.forEach(function(input) {
+            if (!input.value.trim()) {
+                isFormValid = false;
+            }
+        });
+
+        // Enable or disable the "Place Order" button based on the form's validity
+        var placeOrderBtn = document.getElementById('placeOrderBtn');
+        if (isFormValid) {
+            placeOrderBtn.disabled = false; // Enable the button
+        } else {
+            placeOrderBtn.disabled = true; // Disable the button
+        }
+    }
+
+    // Add event listener to check the form whenever an input changes
+    document.querySelector('form').addEventListener('input', checkFormCompletion);
+
+    // Call the function initially to set the correct state of the button
+    window.onload = checkFormCompletion;
+</script>
+
+
+    <!-- Checkout Button -->
+   <a href="login.php"> <button id="placeOrderBtn" class="mt-6 w-full bg-orange-500 text-white py-2 rounded-md font-semibold hover:bg-orange-600" disabled>
+    Place Order
+</button></a>
+
+</div>
+
+<script>
+    let subtotal = <?= $subtotal ?>;
+    let discount = 0;
+    let shippingCost = 0;
+
+    const subtotalElement = document.getElementById('subtotal');
+    const totalElement = document.getElementById('total');
+    const couponInput = document.getElementById('coupon');
+    const couponMessage = document.getElementById('coupon-message');
+
+    function updateTotal() {
+        const total = subtotal - discount + shippingCost;
+        totalElement.textContent = `৳${total.toFixed(2)}`;
+    }
+
+    document.getElementById('apply-coupon').addEventListener('click', () => {
+        const coupon = couponInput.value.trim();
+        if (coupon === 'NewUSER') {
+            discount = subtotal * 0.05; // 5% discount
+            couponMessage.textContent = 'Coupon applied! 5% discount added.';
+            couponMessage.classList.remove('hidden');
+        } else {
+            discount = 0;
+            couponMessage.textContent = 'Invalid coupon code.';
+            couponMessage.classList.remove('hidden');
+        }
+        updateTotal();
+    });
+
+    document.querySelectorAll('input[name="shipping"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'flat') {
+                shippingCost = 40;
+            } else {
+                shippingCost = 0;
+            }
+            updateTotal();
+        });
+    });
+
+    // Initialize values
+    subtotalElement.textContent = `৳${subtotal.toFixed(2)}`;
+    updateTotal();
+</script>
+
+</body>
+</html>
+
+</div>
+<!-- <button class="checkout-btn">Place Order</button> -->
+
+<script>
+    // Example script to dynamically update the subtotal and total
+    const subtotalElement = document.getElementById('subtotal');
+    const totalElement = document.getElementById('total');
+
+    // Set dynamic subtotal
+    const subtotal = 2290.00; // This value will come dynamically
+    subtotalElement.innerText = subtotal.toFixed(2);
+    totalElement.innerText = subtotal.toFixed(2); // Assuming shipping is free initially
+</script>
+
+</body>
+</html>
+
+
+
+</div>
+</div>
+
+
+
+</div>
+<!-- end of part-A and B -->
+
+
+</div>
+<!-- 
+<style>
+    *{
+        outline: 1px solid red;
+    }
+</style> -->
+
+
+
+
+    <!-- footer section -->
+    <footer>
+      <div class="h-80 bg-black mt-20 pl-8 pr-8">
+
+        <!-- part-A -->
+        <div class="text-red-50 flex pt-16 justify-between">
+
+          <!-- column-1 -->
+          <div>
+            <div class="pb-2 font-semibold">About</div>
+            <div class="text-gray-400">Company</div>
+            <div class="text-gray-400">Orders</div>
+            <div class="text-gray-400">Quality</div>
+            <div class="text-gray-400">Privacy Policy</div>
+            <div class="text-gray-400">Gift Cards</div>
+          </div>
+
+          <!-- column-2 -->
+          <div>
+            <div class="pb-2 font-semibold">Help</div>
+            <div class="text-gray-400">My Account</div>
+            <div class="text-gray-400">Customer Help</div>
+            <div class="text-gray-400">Contact Us</div>
+            <div class="text-gray-400">Terms & Conditions</div>
+            <div class="text-gray-400">FAQ</div>
+          </div>
+
+
+          <!-- column-3 -->
+          <div>
+            <div class="pb-2 font-semibold">Follow</div>
+            <div class="text-gray-400">Facebook</div>
+            <div class="text-gray-400">Instagram</div>
+            <div class="text-gray-400">Pinterest</div>
+            <div class="text-gray-400">Youtube</div>
+          </div>
+
+
+
+          <!-- column-4 -->
+          <div>
+  <div class="pb-2 font-semibold">Address</div>
+  <div class="text-gray-400">
+    <?php echo nl2br(htmlspecialchars($address)); ?>
+  </div>
+</div>
+
+
+        </div>
+
+
+        <!-- part-B -->
+        <div class="text-white pt-14">
+          <div>
+            <hr style="border: 1px solid rgb(50, 50, 50);">
+          </div>
+          <div class="flex justify-center text-center pt-3">All Rights Reserved © Poshaprani.com 2024</div>
+        </div>
+
+
+      </div>
+
+    </footer>
+
+
+</body>
+
+</html>
+
+

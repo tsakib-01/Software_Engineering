@@ -1,0 +1,61 @@
+navbar - 60px height
+
+Top Categories Background Color: #222222
+
+Cart & Read More: #ff4500
+
+Text: White
+
+
+
+
+Are you a new user? Join today and enjoy
+Flat 5% Discount on your 1st order.
+For a limited time!
+
+With coupon code : NewUSER
+
+
+<div class="relative w-full h-64">
+  <img src="your-image-url.jpg" alt="Description" class="object-cover w-full h-full" />
+  <div class="absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50">
+    <h2 class="text-xl">Your Text Here</h2>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+------------------------------------------TEXT SECTION---------------------------------------------------
+
+
+Cats
+Food,Litter,Feeders & Toys
+
+Dogs
+Food,Bowls & Toys
+
+Accessories
+Food Bowls,Litter Boxc,Bed
+
+Birds
+Food,Feeders,Cage & Tags
+
+Rabbits
+Food,Grass,Feeders & Toys
+
+Fish
+Food,Bowls & Aquarium,Accessories
+
+
+
+
+
+
+Brands we stock
+
+We stock all available brands in Bangladesh and pick the very best so you can be assured of the quality. There can be no compromises when it comes to quality. #TEAMPP
