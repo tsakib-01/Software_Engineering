@@ -11,7 +11,7 @@ A web-based restaurant management system where customers can view the menu, make
 
 
 ## ⚙️ Setup and Installation
-1. Clone the repo: `git clone https://github.com/yourusername/yourproject.git`
+1. Clone the repo: `git clone https://github.com/tsakib-01/Software_Engineering.git`
 2. Import the `database/rms_project.sql` into your MySQL server.
 3. Configure your `db_connection.php` file with your database credentials.
 4. Run the project using XAMPP or your preferred local server.
